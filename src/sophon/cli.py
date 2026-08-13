@@ -85,6 +85,7 @@ def build_rag(
 ):
     """从 catalog 的有效角色生成 RAG 文档和 bge-m3 向量。"""
     from . import rag_projection
+    print("开始构建 RAG 文档与向量索引...", flush=True)
     rag_projection.rebuild(batch_size=batch_size, reset=reset)
 
 

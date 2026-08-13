@@ -46,7 +46,6 @@ LLM 与 Embedding 接口可以使用同一 CCSwitch 地址和密钥，但必须�
    uv sync
    cp .env.example .env
    ```
-
 2. 编辑 `.env`，填写实际连接信息。`EMBEDDING_MODEL` 必须是 CCSwitch 已开通的
    embedding 模型，不能保留示例占位值：
 
@@ -63,34 +62,28 @@ LLM 与 Embedding 接口可以使用同一 CCSwitch 地址和密钥，但必须�
    # EMBEDDING_BASE_URL=https://your-embedding-host/v1
    # EMBEDDING_API_KEY=your-embedding-key
    ```
-
-3. 将私有数据放入 `data/moegirl/` 与 `data/bangumi/`，然后建立 1,000 条角色的
+3. 将私有数据放入 `data/moegirl/` 与 `data/bangumi/`，然后建立角色的
    catalog 和 RAG 索引：
 
    ```bash
    uv run sophon init-catalog-db
-   uv run sophon ingest-moegirl --limit 1000 --reset
    uv run sophon init-rag-db
+   ```
+4. 执行数据导入，并重建RAG（1000条试操作）
+
+   ```ba
+   uv run sophon ingest-moegirl --limit 1000 --reset
    uv run sophon build-rag --reset
    ```
+5. 提问或只查看候选角色：
 
-4. 提问或只查看候选角色：
-
-   ```bash
+```bash
    uv run sophon ask "银色头发、性格高冷的角色是谁？"
    uv run sophon retrieve "银色头发、性格高冷的角色"
-   ```
+```
 
 `ask` 会依次显示特征抽取、向量检索和回答生成阶段，并且只允许模型依据召回资料作答。
 `retrieve` 不调用 LLM，但会调用远程 Embedding 服务编码查询。
-
-若你已完成 1,000 条 catalog 导入，只需执行：
-
-```bash
-uv run sophon init-catalog-db
-uv run sophon init-rag-db
-uv run sophon build-rag --reset
-```
 
 ## 数据更新
 
@@ -142,24 +135,24 @@ uv run sophon build-rag --reset
 
 ## 命令
 
-| 命令 | 作用 |
-| --- | --- |
-| `sophon init-catalog-db` | 创建 `source_*` 与 `catalog_*` 事实表 |
-| `sophon ingest-moegirl` | 将本地私有 JSON 写入 catalog |
-| `sophon ingest-moegirl --changed-only` | 仅同步新增或变化角色 |
-| `sophon init-rag-db` | 创建 `docs`、`works` 向量检索表 |
-| `sophon build-rag --reset` | 从有效角色重建 RAG 文档和向量 |
-| `sophon retrieve <query>` | 检索角色候选，不调用 LLM |
-| `sophon ask <query>` | 检索并生成带引用的角色回答 |
+| 命令                                     | 作用                                     |
+| ---------------------------------------- | ---------------------------------------- |
+| `sophon init-catalog-db`               | 创建`source_*` 与 `catalog_*` 事实表 |
+| `sophon ingest-moegirl`                | 将本地私有 JSON 写入 catalog             |
+| `sophon ingest-moegirl --changed-only` | 仅同步新增或变化角色                     |
+| `sophon init-rag-db`                   | 创建`docs`、`works` 向量检索表       |
+| `sophon build-rag --reset`             | 从有效角色重建 RAG 文档和向量            |
+| `sophon retrieve <query>`              | 检索角色候选，不调用 LLM                 |
+| `sophon ask <query>`                   | 检索并生成带引用的角色回答               |
 
 ## 项目结构
 
-| 路径 | 作用 |
-| --- | --- |
-| `data/` | 私有输入数据，不提交、不打包 |
-| `sql/001_catalog_schema.sql` | 来源追溯与角色事实层 |
-| `sql/002_rag_schema.sql` | 角色 RAG 检索层 |
-| `src/sophon/importers/moegirl.py` | JSON 到目录模型的解析 |
-| `src/sophon/loaders/moegirl.py` | catalog 批量落库与差异同步 |
-| `src/sophon/rag_projection.py` | catalog 到 RAG 文档、向量的投影 |
-| `scripts/sync_catalog.sh` | 数据更新后的定时同步入口 |
+| 路径                                | 作用                            |
+| ----------------------------------- | ------------------------------- |
+| `data/`                           | 私有输入数据，不提交、不打包    |
+| `sql/001_catalog_schema.sql`      | 来源追溯与角色事实层            |
+| `sql/002_rag_schema.sql`          | 角色 RAG 检索层                 |
+| `src/sophon/importers/moegirl.py` | JSON 到目录模型的解析           |
+| `src/sophon/loaders/moegirl.py`   | catalog 批量落库与差异同步      |
+| `src/sophon/rag_projection.py`    | catalog 到 RAG 文档、向量的投影 |
+| `scripts/sync_catalog.sh`         | 数据更新后的定时同步入口        |
