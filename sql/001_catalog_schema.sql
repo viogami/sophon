@@ -10,18 +10,6 @@ create table if not exists source_registry (
     updated_at timestamptz not null default now()
 );
 
-create table if not exists source_snapshots (
-    id bigserial primary key,
-    source_code text not null references source_registry(source_code) on delete cascade,
-    artifact_path text not null,
-    content_hash text not null,
-    payload jsonb not null,
-    metadata jsonb not null default '{}',
-    imported_at timestamptz not null default now(),
-    unique (source_code, artifact_path, content_hash)
-);
-create index if not exists source_snapshots_source_idx on source_snapshots (source_code);
-
 -- 一条记录对应一个外部对象的原始、可重放载荷，不对其做语义删减。
 create table if not exists source_records (
     id bigserial primary key,

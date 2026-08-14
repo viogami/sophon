@@ -87,11 +87,6 @@ def _json_hash(payload: object) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
-def _artifact_path(path) -> str:
-    data_root = path.parents[1]
-    return str(path.relative_to(data_root))
-
-
 def _lookup_ids(conn, table: str, source_keys: Sequence[str]) -> dict[str, int]:
     if not source_keys:
         return {}
@@ -185,27 +180,6 @@ def load(dataset: MoeGirlDataset, reset: bool = False, changed_only: bool = Fals
                 "https://github.com/zhuobinggang/moegirl-dataset",
                 Jsonb({"import_stage": "catalog-v1"}),
             ),
-        )
-
-        _execute_many(
-            conn,
-            """insert into source_snapshots
-               (source_code, artifact_path, content_hash, payload, metadata)
-               values (%s, %s, %s, %s, %s)
-               on conflict (source_code, artifact_path, content_hash) do nothing""",
-            (
-                (
-                    SOURCE_CODE,
-                    _artifact_path(artifact.path),
-                    _json_hash(artifact.payload),
-                    Jsonb(artifact.payload),
-                    Jsonb({"format": "json"}),
-                )
-                for artifact in dataset.source_artifacts
-            ),
-            label="写入原始 JSON 快照",
-            total=len(dataset.source_artifacts),
-            batch_size=1,
         )
 
         if changed_only:
